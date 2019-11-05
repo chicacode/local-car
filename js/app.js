@@ -18,6 +18,9 @@ function cargarEventListener(){
     // Al vaciar el carrito 
     vaciarCarritoBtn.addEventListener('click', vaciarCarrito);
 
+    // Al cargar el documento mostrar LocalStorage
+    document.addEventListener('DOMContentLoaded', leerLocalStorage);
+
 }
 
 
@@ -74,11 +77,18 @@ function insertarCarrito(curso){
 function eliminarCurso(e){
     e.preventDefault();
 
-    let curso;
+    let curso,
+        cursoId;
+
     // Usando Delegation para reaccionar a elementos que se crean dinamicamente
     if(e.target.classList.contains('borrar-curso')){ // Si existe este curso ){
         e.target.parentElement.parentElement.remove();
+        curso = e.target.parentElement.parentElement;
+        cursoId = curso.querySelector('a').getAttribute('data-id'); // cogemos el ID del carrito que queremos eliminar
     }
+
+    // Aqui llamamos a la función de eliminar curso en Ls
+    eliminarCursoLocalStorafe(cursoId);
 }
 // Elimina los curso del carrito en el DOM
 function vaciarCarrito(){
@@ -90,7 +100,12 @@ function vaciarCarrito(){
     while(listaCursos.firstChild){
         listaCursos.removeChild(listaCursos.firstChild);
     } // forma recomendada
-    return false;
+    
+
+    // vaciar LS
+    vaciarLocalStorage();
+
+    return false; // hay que colocarlo despues de la función sino se corta la funcion de vaciarLS
 
 }
 
@@ -121,4 +136,54 @@ function obtenerCursosLocalStorage(){
         cursosLS = JSON.parse( localStorage.getItem('cursos') ); // Leemos curso y lo guardamos como array con JSON .parse
     }
     return cursosLS; // devuelvo lo que hay en el array
+}
+
+// Imprime los cursos de LS en el carrito DOM
+function leerLocalStorage(){
+    let cursosLS;
+    cursosLS = obtenerCursosLocalStorage();
+
+    cursosLS.forEach(function(curso){
+        const row = document.createElement('tr');
+    // Creamos una tabla porque es la estructura que está en el HTML 
+    row.innerHTML = `
+        <td>
+            <img src="${curso.imagen}" width="100">
+        </td>
+        <td>
+            ${curso.titulo}
+        </td>
+        <td>
+            ${curso.precio}
+        </td>
+        <td>
+            <a href="#" class="borrar-curso" data-id="${curso.id}">X</a>
+        </td>
+    `;
+
+    listaCursos.appendChild(row); // en lista curso insertamos cada fila del carrito que viene del LS
+
+    });
+}
+// Eliminar cada curso por el ID del LS
+
+function eliminarCursoLocalStorafe(curso){
+    let cursosLS;
+// Obtenemos el array de cursos
+    cursosLS = obtenerCursosLocalStorage();
+// Iteramos comparando el ID del curso borrado con los del LS
+    cursosLS.forEach(function(cursoLS, index){
+
+        if(cursoLS.id === curso){
+            cursosLS.splice(index, 1); // con esa linea de codigo borramos
+        }
+
+    });                 // key  stringify-> convierte array en string
+localStorage.setItem('cursos', JSON.stringify(cursosLS) ); // Con esta línea actualizamos el LS despues de borrar cada curso ejemplo si tenia 4 cursos y borre 1 quedan 3
+// Añadimos el array actual al storage
+}
+
+// Elimina todos los cursos de Local Storage
+function vaciarLocalStorage(){
+    localStorage.clear();
 }
