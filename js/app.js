@@ -2,6 +2,7 @@
 const carrito = document.getElementById('carrito');
 const cursos = document.getElementById('lista-cursos');
 const listaCursos = document.querySelector('#lista-carrito tbody');
+const vaciarCarritoBtn = document.getElementById('vaciar-carrito');
 
 
 // Listeners
@@ -10,6 +11,12 @@ cargarEventListener();
 function cargarEventListener(){
     // Dispara cuando se presiona 
     cursos.addEventListener('click', comprarCurso);
+
+    // Cuando se elimina un curso del carrito con delegation
+    carrito.addEventListener('click', eliminarCurso);
+
+    // Al vaciar el carrito 
+    vaciarCarritoBtn.addEventListener('click', vaciarCarrito);
 
 }
 
@@ -29,6 +36,7 @@ function comprarCurso(e){
 // función lee los datos del curso
 function leerDatosCurso(curso){
 //Aqui recogemos la información del carrito
+// Construimos el objeto y lo pasamos a insertarCarrito
     const infoCurso = {
         imagen: curso.querySelector('img').src,
         titulo: curso.querySelector('h4').textContent,
@@ -46,7 +54,7 @@ function insertarCarrito(curso){
     // Creamos una tabla porque es la estructura que está en el HTML 
     row.innerHTML = `
         <td>
-            <img src="${curso.imagen}">
+            <img src="${curso.imagen}" width="100">
         </td>
         <td>
             ${curso.titulo}
@@ -60,5 +68,57 @@ function insertarCarrito(curso){
     `;
 
     listaCursos.appendChild(row); // con appenchild recreamos en la tabla de lista carrito los elementos que se han creado en la función de insertarCarrito
+    guardarCursoLocalStorage(curso);
+}
+// Elimina un curso del carrito por default
+function eliminarCurso(e){
+    e.preventDefault();
 
+    let curso;
+    // Usando Delegation para reaccionar a elementos que se crean dinamicamente
+    if(e.target.classList.contains('borrar-curso')){ // Si existe este curso ){
+        e.target.parentElement.parentElement.remove();
+    }
+}
+// Elimina los curso del carrito en el DOM
+function vaciarCarrito(){
+    //listaCursos.innerHTML = ''; // forma lenta
+
+    // forma rapida y recomendada
+    // mientras siga habiendo cursos eliminalos
+
+    while(listaCursos.firstChild){
+        listaCursos.removeChild(listaCursos.firstChild);
+    } // forma recomendada
+    return false;
+
+}
+
+// Almacena cursos en el carrito en LocalStorage
+
+function guardarCursoLocalStorage(curso){
+    let cursos;
+     // toma el valor con datos de un LS o vacio
+    cursos = obtenerCursosLocalStorage();
+
+    // El curso seleccionado se agrega al array
+    cursos.push(curso);
+
+    // Esta linea de codigo es vital para añadir al LS y convertimos el array en strings
+    localStorage.setItem('cursos', JSON.stringify(cursos) );
+
+}
+// comprueba que hay elementos en localStorage
+// Verifica que hay algo en localStorage si hay array vacio o con cursos
+function obtenerCursosLocalStorage(){
+    let cursosLS;
+
+    // comprobamos si hay algo en localStorage
+    if(localStorage.getItem('cursos')===null){
+        cursosLS = []; // array vacio
+
+    }else{
+        cursosLS = JSON.parse( localStorage.getItem('cursos') ); // Leemos curso y lo guardamos como array con JSON .parse
+    }
+    return cursosLS; // devuelvo lo que hay en el array
 }
